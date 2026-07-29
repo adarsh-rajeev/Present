@@ -14,11 +14,45 @@ model Teacher {
 }
 
 model Student {
-  id         Int     @id @default(autoincrement())
-  rollNo     Int     @unique
-  name       String
-  topic      String  @default("")
-  review     String  @default("")
-  disabled   Boolean @default(false)
-  presented  Boolean @default(false)
+  id       Int    @id @default(autoincrement())
+  rollNo   Int    @unique
+  name     String
+  excluded Boolean @default(false)
+
+  records  PresentationRecord[]
+}
+
+model PresentationSession {
+  id            Int      @id @default(autoincrement())
+  sessionNumber Int      @unique
+
+  startedAt     DateTime @default(now())
+  endedAt       DateTime?
+
+  records       PresentationRecord[]
+}
+
+model PresentationRecord {
+  id                  Int      @id @default(autoincrement())
+
+  sessionId           Int
+  studentId           Int
+
+  presentationOrder   Int
+
+  topic               String?
+
+  overallRating       Int?
+  communicationRating Int?
+  confidenceRating    Int?
+  contentRating       Int?
+
+  remarks             String?
+
+  presentedAt         DateTime @default(now())
+
+  session PresentationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, studentId])
 }

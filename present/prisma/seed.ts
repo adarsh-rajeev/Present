@@ -82,14 +82,12 @@ async function main() {
       },
       update: {
         name: student.name,
+        excluded: false,
       },
       create: {
         rollNo: student.rollNo,
         name: student.name,
-        topic: "",
-        review: "",
-        disabled: false,
-        presented: false,
+        excluded: false,
       },
     });
   }
