@@ -19,6 +19,8 @@ model Student {
   rollNo   Int                  @unique
   name     String
   excluded Boolean              @default(false)
+  currentTopic String?
+
   records  PresentationRecord[]
 }
 

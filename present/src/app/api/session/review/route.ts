@@ -31,6 +31,23 @@ export async function POST(req: Request) {
       );
     }
 
+    // Fetch the student's current topic
+    const student = await prisma.student.findUnique({
+      where: {
+        id: studentId,
+      },
+      select: {
+        currentTopic: true,
+      },
+    });
+
+    if (!student) {
+      return NextResponse.json(
+        { error: "Student not found" },
+        { status: 404 }
+      );
+    }
+
     // Find the next presentation order
     const count = await prisma.presentationRecord.count({
       where: {
@@ -38,11 +55,16 @@ export async function POST(req: Request) {
       },
     });
 
+    // Save presentation record
     const record = await prisma.presentationRecord.create({
       data: {
         sessionId: session.id,
         studentId,
         presentationOrder: count + 1,
+
+        // Save topic snapshot
+        topic: student.currentTopic,
+
         status,
         remarks,
       },

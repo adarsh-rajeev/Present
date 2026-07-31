@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 type Record = {
   id: number;
   presentationOrder: number;
+  topic: string | null;
   remarks: string | null;
   presentedAt: Date | string;
   status: string;
@@ -29,7 +30,8 @@ export default function HistoryTable({
     return records.filter((record) => {
       return (
         record.student.name.toLowerCase().includes(keyword) ||
-        record.student.rollNo.toString().includes(keyword)
+        record.student.rollNo.toString().includes(keyword) ||
+        (record.topic ?? "").toLowerCase().includes(keyword)
       );
     });
   }, [records, search]);
@@ -69,10 +71,9 @@ export default function HistoryTable({
   return (
     <>
       <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-
         <input
           type="text"
-          placeholder="Search by roll number or student name..."
+          placeholder="Search by roll number, student name or topic..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-4 py-3 outline-none focus:border-purple-500 md:max-w-md"
@@ -84,16 +85,16 @@ export default function HistoryTable({
             {filtered.length}
           </span>
         </p>
-
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-zinc-800">
-        <table className="w-full">
+      <div className="overflow-x-auto rounded-xl border border-zinc-800">
+        <table className="min-w-full">
           <thead className="bg-zinc-900">
             <tr>
               <th className="p-4 text-left">Order</th>
               <th className="p-4 text-left">Roll No</th>
               <th className="p-4 text-left">Student</th>
+              <th className="p-4 text-left">Topic</th>
               <th className="p-4 text-left">Status</th>
               <th className="p-4 text-left">Remarks</th>
               <th className="p-4 text-left">Presented At</th>
@@ -114,19 +115,31 @@ export default function HistoryTable({
                   {record.student.rollNo}
                 </td>
 
-                <td className="p-4">
+                <td className="p-4 font-medium">
                   {record.student.name}
+                </td>
+
+                <td className="max-w-sm p-4">
+                  {record.topic ? (
+                    <span className="break-words text-zinc-200">
+                      {record.topic}
+                    </span>
+                  ) : (
+                    <span className="italic text-zinc-500">
+                      No topic
+                    </span>
+                  )}
                 </td>
 
                 <td className="p-4">
                   {statusBadge(record.status)}
                 </td>
 
-                <td className="p-4">
+                <td className="max-w-xs p-4">
                   {record.remarks || "—"}
                 </td>
 
-                <td className="p-4">
+                <td className="whitespace-nowrap p-4">
                   {new Date(record.presentedAt).toLocaleString()}
                 </td>
               </tr>
@@ -135,7 +148,7 @@ export default function HistoryTable({
             {filtered.length === 0 && (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={7}
                   className="p-8 text-center text-zinc-400"
                 >
                   No records found.

@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+
 import CanvasWheel from "./CanvasWheel";
 import Pointer from "./Pointer";
 import WinnerModal from "./WinnerModal";
 import PresentationTimer from "./PresentationTimer";
 import ReviewModal from "./ReviewModal";
+import ReviewSuccessModal from "./ReviewSuccessModal";
 
 import useWheelAnimation from "@/hooks/useWheelAnimation";
 import { getWheelTargetRotation } from "@/lib/wheelMath";
@@ -17,6 +20,7 @@ type Student = {
   id: number;
   rollNo: number;
   name: string;
+  currentTopic: string | null;
   excluded?: boolean;
 };
 
@@ -25,6 +29,8 @@ interface SpinWheelProps {
 }
 
 export default function SpinWheel({ students }: SpinWheelProps) {
+  const router = useRouter();
+
   const [loading, setLoading] = useState(false);
 
   const [student, setStudent] = useState<Student | null>(null);
@@ -32,6 +38,10 @@ export default function SpinWheel({ students }: SpinWheelProps) {
   const [showWinner, setShowWinner] = useState(false);
   const [showTimer, setShowTimer] = useState(false);
   const [showReview, setShowReview] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const [submittedStatus, setSubmittedStatus] =
+    useState<PresentationStatus | "">("");
 
   // Force remounts
   const [timerKey, setTimerKey] = useState(0);
@@ -59,7 +69,9 @@ export default function SpinWheel({ students }: SpinWheelProps) {
         return;
       }
 
-      const winnerIndex = students.findIndex((s) => s.id === data.student.id);
+      const winnerIndex = students.findIndex(
+        (s) => s.id === data.student.id
+      );
 
       if (winnerIndex === -1) {
         alert("Winner not found in wheel.");
@@ -71,7 +83,7 @@ export default function SpinWheel({ students }: SpinWheelProps) {
         rotation,
         winnerIndex,
         students.length,
-        EXTRA_TURNS,
+        EXTRA_TURNS
       );
 
       spinTo(finalRotation, 5000, () => {
@@ -88,7 +100,7 @@ export default function SpinWheel({ students }: SpinWheelProps) {
 
   async function handleReviewSubmit(
     status: PresentationStatus,
-    remarks: string,
+    remarks: string
   ) {
     if (!student) return;
 
@@ -112,16 +124,14 @@ export default function SpinWheel({ students }: SpinWheelProps) {
         return;
       }
 
+      setSubmittedStatus(status);
       setShowReview(false);
-
-      alert("Review Submitted!");
+      setShowSuccess(true);
     } catch (error) {
       console.error(error);
       alert("Something went wrong.");
     }
-  }
-
-  return (
+  }  return (
     <>
       <div className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl">
         <h2 className="mb-8 text-center text-3xl font-bold">
@@ -165,6 +175,7 @@ export default function SpinWheel({ students }: SpinWheelProps) {
         }}
       />
 
+      {/* Timer */}
       <PresentationTimer
         key={`timer-${timerKey}`}
         open={showTimer}
@@ -183,12 +194,33 @@ export default function SpinWheel({ students }: SpinWheelProps) {
         }}
       />
 
+      {/* Review */}
       <ReviewModal
         key={`review-${reviewKey}`}
         open={showReview}
         student={student}
         onClose={() => setShowReview(false)}
         onSubmit={handleReviewSubmit}
+      />
+
+      {/* Success */}
+      <ReviewSuccessModal
+        open={showSuccess}
+        student={student}
+        status={submittedStatus}
+        onSpinNext={() => {
+          setShowSuccess(false);
+
+          setStudent(null);
+
+          setSubmittedStatus("");
+
+          setShowWinner(false);
+          setShowTimer(false);
+          setShowReview(false);
+
+          router.refresh();
+        }}
       />
     </>
   );

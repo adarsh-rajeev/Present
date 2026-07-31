@@ -1,11 +1,13 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { verifySession } from "@/lib/auth";
-import StudentTable from "@/components/StudentTable";
-import { prisma } from "@/lib/prisma";
-import StartSessionButton from "@/components/StartSessionButton";
 import Link from "next/link";
+
+import { verifySession } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
 import DashboardHeader from "@/components/DashboardHeader";
+import StudentTable from "@/components/StudentTable";
+import StartSessionButton from "@/components/StartSessionButton";
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();
@@ -35,6 +37,24 @@ export default async function DashboardPage() {
       endedAt: null,
     },
   });
+
+  let presentedCount = 0;
+
+  if (activeSession) {
+    presentedCount = await prisma.presentationRecord.count({
+      where: {
+        sessionId: activeSession.id,
+      },
+    });
+  }
+
+  const totalStudents = students.length;
+
+  const excludedCount = students.filter(
+    (student) => student.excluded
+  ).length;
+
+  const remainingCount = totalStudents - presentedCount;
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
@@ -98,23 +118,29 @@ export default async function DashboardPage() {
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-xl bg-zinc-900 p-6">
             <p className="text-sm text-zinc-400">Students</p>
-            <h3 className="mt-2 text-4xl font-bold">{students.length}</h3>
+            <h3 className="mt-2 text-4xl font-bold">
+              {totalStudents}
+            </h3>
           </div>
 
           <div className="rounded-xl bg-zinc-900 p-6">
             <p className="text-sm text-zinc-400">Presented</p>
-            <h3 className="mt-2 text-4xl font-bold">0</h3>
+            <h3 className="mt-2 text-4xl font-bold">
+              {presentedCount}
+            </h3>
           </div>
 
           <div className="rounded-xl bg-zinc-900 p-6">
             <p className="text-sm text-zinc-400">Remaining</p>
-            <h3 className="mt-2 text-4xl font-bold">{students.length}</h3>
+            <h3 className="mt-2 text-4xl font-bold">
+              {remainingCount}
+            </h3>
           </div>
 
           <div className="rounded-xl bg-zinc-900 p-6">
             <p className="text-sm text-zinc-400">Excluded</p>
             <h3 className="mt-2 text-4xl font-bold">
-              {students.filter((student) => student.excluded).length}
+              {excludedCount}
             </h3>
           </div>
         </div>
