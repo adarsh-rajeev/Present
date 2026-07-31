@@ -48,7 +48,7 @@ export default async function WheelPage() {
 
         <ExcludedStudents students={excludedStudents} />
 
-        <SpinWheel />
+        <SpinWheel students={students} />
       </div>
     </main>
   );
