@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Teacher {
@@ -14,45 +15,43 @@ model Teacher {
 }
 
 model Student {
-  id       Int    @id @default(autoincrement())
-  rollNo   Int    @unique
+  id       Int                  @id @default(autoincrement())
+  rollNo   Int                  @unique
   name     String
-  excluded Boolean @default(false)
-
+  excluded Boolean              @default(false)
   records  PresentationRecord[]
 }
 
 model PresentationSession {
-  id            Int      @id @default(autoincrement())
-  sessionNumber Int      @unique
-
-  startedAt     DateTime @default(now())
+  id            Int                  @id @default(autoincrement())
+  sessionNumber Int                  @unique
+  startedAt     DateTime             @default(now())
   endedAt       DateTime?
-
   records       PresentationRecord[]
 }
 
 model PresentationRecord {
-  id                  Int      @id @default(autoincrement())
-
+  id                  Int                 @id @default(autoincrement())
   sessionId           Int
   studentId           Int
-
   presentationOrder   Int
-
   topic               String?
-
   overallRating       Int?
   communicationRating Int?
   confidenceRating    Int?
   contentRating       Int?
-
   remarks             String?
-
-  presentedAt         DateTime @default(now())
-
-  session PresentationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  presentedAt         DateTime            @default(now())
+  status              PresentationStatus
+  session             PresentationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  student             Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([sessionId, studentId])
+}
+
+enum PresentationStatus {
+  EXCELLENT
+  GOOD
+  AVERAGE
+  NEEDS_IMPROVEMENT
 }

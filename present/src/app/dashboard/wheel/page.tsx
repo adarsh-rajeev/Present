@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+
+import DashboardHeader from "@/components/DashboardHeader";
 import SpinWheel from "@/components/SpinWheel";
 import QuickControls from "@/components/QuickControls";
 import ExcludedStudents from "@/components/ExcludedStudents";
@@ -35,21 +37,18 @@ export default async function WheelPage() {
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
-      <div className="mx-auto max-w-7xl p-8">
-        <h1 className="text-4xl font-bold text-purple-500">
-          Presentation Wheel
-        </h1>
+      <DashboardHeader
+        title="Presentation Wheel"
+        subtitle={`Session #${session.sessionNumber}`}
+      />
 
-        <p className="mt-2 text-zinc-400">
-          Session #{session.sessionNumber}
-        </p>
-
+      <section className="mx-auto max-w-7xl p-8">
         <QuickControls />
 
         <ExcludedStudents students={excludedStudents} />
 
         <SpinWheel students={students} />
-      </div>
+      </section>
     </main>
   );
 }

@@ -1,11 +1,11 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth";
-import LogoutButton from "@/components/LogoutButton";
 import StudentTable from "@/components/StudentTable";
 import { prisma } from "@/lib/prisma";
 import StartSessionButton from "@/components/StartSessionButton";
 import Link from "next/link";
+import DashboardHeader from "@/components/DashboardHeader";
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();
@@ -38,30 +38,17 @@ export default async function DashboardPage() {
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
-      {/* Header */}
-      <header className="border-b border-zinc-800 bg-zinc-900">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-5">
-          <div>
-            <h1 className="text-3xl font-bold text-purple-500">Present</h1>
-            <p className="text-sm text-zinc-400">
-              Classroom Presentation Manager
-            </p>
-          </div>
+      <DashboardHeader
+        title="Present"
+        subtitle="Classroom Presentation Manager"
+      />
 
-          <div className="text-right">
-            <p className="text-sm text-zinc-400">Logged in as</p>
-            <p className="font-semibold">{email}</p>
-
-            <div className="mt-3">
-              <LogoutButton />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Dashboard */}
       <section className="mx-auto max-w-7xl p-8">
-        <h2 className="mb-6 text-2xl font-bold">Dashboard</h2>
+        {/* Logged in user */}
+        <div className="mb-6 rounded-xl bg-zinc-900 p-5">
+          <p className="text-sm text-zinc-400">Logged in as</p>
+          <p className="font-semibold">{email}</p>
+        </div>
 
         {/* Active Session */}
         <div className="mb-6 rounded-xl border border-purple-700 bg-purple-900/30 p-5">
@@ -70,17 +57,27 @@ export default async function DashboardPage() {
               <h2 className="text-xl font-bold">
                 🟢 Active Session #{activeSession.sessionNumber}
               </h2>
-            
+
               <p className="mt-2 text-zinc-300">
-                Started at {new Date(activeSession.startedAt).toLocaleString()}
+                Started at{" "}
+                {new Date(activeSession.startedAt).toLocaleString()}
               </p>
 
-              <Link
-                href="/dashboard/wheel"
-                className="mt-4 inline-block rounded-lg bg-purple-600 px-5 py-2 font-semibold hover:bg-purple-700"
-              >
-                Open Presentation Wheel
-              </Link>
+              <div className="mt-4 flex flex-wrap gap-3">
+                <Link
+                  href="/dashboard/wheel"
+                  className="rounded-lg bg-purple-600 px-5 py-2 font-semibold hover:bg-purple-700"
+                >
+                  🎡 Presentation Wheel
+                </Link>
+
+                <Link
+                  href="/dashboard/history"
+                  className="rounded-lg bg-zinc-800 px-5 py-2 font-semibold hover:bg-zinc-700"
+                >
+                  📋 Presentation History
+                </Link>
+              </div>
             </>
           ) : (
             <>

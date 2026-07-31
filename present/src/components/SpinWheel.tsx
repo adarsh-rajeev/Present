@@ -5,8 +5,11 @@ import CanvasWheel from "./CanvasWheel";
 import Pointer from "./Pointer";
 import WinnerModal from "./WinnerModal";
 import PresentationTimer from "./PresentationTimer";
+import ReviewModal from "./ReviewModal";
+
 import useWheelAnimation from "@/hooks/useWheelAnimation";
 import { getWheelTargetRotation } from "@/lib/wheelMath";
+import { type PresentationStatus } from "@/lib/presentation";
 
 const EXTRA_TURNS = 5;
 
@@ -23,14 +26,16 @@ interface SpinWheelProps {
 
 export default function SpinWheel({ students }: SpinWheelProps) {
   const [loading, setLoading] = useState(false);
+
   const [student, setStudent] = useState<Student | null>(null);
 
   const [showWinner, setShowWinner] = useState(false);
-
   const [showTimer, setShowTimer] = useState(false);
+  const [showReview, setShowReview] = useState(false);
 
-  // Force PresentationTimer to remount for every new presentation
+  // Force remounts
   const [timerKey, setTimerKey] = useState(0);
+  const [reviewKey, setReviewKey] = useState(0);
 
   const { rotation, spinTo } = useWheelAnimation();
 
@@ -54,10 +59,7 @@ export default function SpinWheel({ students }: SpinWheelProps) {
         return;
       }
 
-      // Find the winner in the wheel
-      const winnerIndex = students.findIndex(
-        (s) => s.id === data.student.id
-      );
+      const winnerIndex = students.findIndex((s) => s.id === data.student.id);
 
       if (winnerIndex === -1) {
         alert("Winner not found in wheel.");
@@ -69,7 +71,7 @@ export default function SpinWheel({ students }: SpinWheelProps) {
         rotation,
         winnerIndex,
         students.length,
-        EXTRA_TURNS
+        EXTRA_TURNS,
       );
 
       spinTo(finalRotation, 5000, () => {
@@ -84,6 +86,41 @@ export default function SpinWheel({ students }: SpinWheelProps) {
     }
   }
 
+  async function handleReviewSubmit(
+    status: PresentationStatus,
+    remarks: string,
+  ) {
+    if (!student) return;
+
+    try {
+      const res = await fetch("/api/session/review", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          studentId: student.id,
+          status,
+          remarks,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        alert(data.error || "Failed to save review.");
+        return;
+      }
+
+      setShowReview(false);
+
+      alert("Review Submitted!");
+    } catch (error) {
+      console.error(error);
+      alert("Something went wrong.");
+    }
+  }
+
   return (
     <>
       <div className="mt-8 rounded-2xl border border-zinc-800 bg-zinc-900 p-8 shadow-xl">
@@ -94,10 +131,7 @@ export default function SpinWheel({ students }: SpinWheelProps) {
         <div className="flex flex-col items-center rounded-xl bg-zinc-950 py-10">
           <div className="relative">
             <Pointer />
-            <CanvasWheel
-              students={students}
-              rotation={rotation}
-            />
+            <CanvasWheel students={students} rotation={rotation} />
           </div>
 
           <p className="mt-8 text-lg text-zinc-500">
@@ -126,28 +160,35 @@ export default function SpinWheel({ students }: SpinWheelProps) {
         onStart={() => {
           setShowWinner(false);
 
-          // Create a brand new timer every presentation
           setTimerKey((prev) => prev + 1);
-
           setShowTimer(true);
         }}
       />
 
-      {/* Presentation Timer */}
       <PresentationTimer
-        key={timerKey}
+        key={`timer-${timerKey}`}
         open={showTimer}
         student={student}
         onFinish={() => {
           setShowTimer(false);
 
-          // Next step:
-          // Open Review Modal
-          alert("Presentation Finished!");
+          setReviewKey((prev) => prev + 1);
+          setShowReview(true);
         }}
         onClose={() => {
           setShowTimer(false);
+
+          setReviewKey((prev) => prev + 1);
+          setShowReview(true);
         }}
+      />
+
+      <ReviewModal
+        key={`review-${reviewKey}`}
+        open={showReview}
+        student={student}
+        onClose={() => setShowReview(false)}
+        onSubmit={handleReviewSubmit}
       />
     </>
   );
